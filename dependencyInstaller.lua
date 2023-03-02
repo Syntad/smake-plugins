@@ -11,21 +11,26 @@ local function exists(file)
 end
 
 local function download(url, path)
-    run('curl "' .. url .. '" -L -o "./' .. path .. '"')
+    run('curl "' .. url .. '" -L -o "./' .. path .. '.zip"')
 end
 
 local function getZipFolderName(path)
-    local pfile = io.popen('tar -tf "./' .. path ..  '" | head -1')
+    local pfile = io.popen('tar -tf "./' .. path ..  '.zip" | head -1')
+
+    if not pfile then
+        error('Could not get folder name')
+    end
+
     local folderName = pfile:lines()():gsub('/.*', '')
     pfile:close()
 
     return folderName
 end
 
-local function unzip(path)
+local function unzip(name)
     run(
-        'tar -xf "./' .. path .. '"',
-        'rm "./' .. path .. '"'
+        'tar -xf "./' .. name .. '.zip"',
+        'rm "./' .. name .. '.zip"'
     )
 end
 
@@ -55,7 +60,6 @@ end
 --- @return folder self
 function folder:Move(relFrom, to)
     self:CheckValidity()
-    print('mv ' .. relPath(self:ConcatenatePath(relFrom)) .. ' ' .. relPath(to))
     run('mv ' .. relPath(self:ConcatenatePath(relFrom)) .. ' ' .. relPath(to))
     return self
 end
@@ -150,7 +154,6 @@ function installer:DownloadAndUnzip(url)
     download(url, self.name)
     local folderName = getZipFolderName(self.name)
     unzip(self.name)
-    print(folderName)
 
     return createFolder(self, folderName)
 end
