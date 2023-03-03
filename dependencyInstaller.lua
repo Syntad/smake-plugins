@@ -14,17 +14,33 @@ local function download(url, path)
     run('curl "' .. url .. '" -L -o "./' .. path .. '.zip"')
 end
 
-local function getZipFolderName(path)
-    local pfile = io.popen('tar -tf "./' .. path ..  '.zip" | head -1')
+local function cleanZipFolderName(name)
+    return name:gsub('/.*', '')
+end
 
-    if not pfile then
-        error('Could not get folder name')
+local function getZipFolderName(path)
+    local cmd = 'tar -tf "./' .. path ..  '.zip" | head -1'
+    local success, pfile, err = pcall(io.popen, cmd)
+
+    if not success then
+        local tmpPath = os.tmpname()
+        local file, err = io.open(tmpPath, 'w+')
+        assert(file, 'Could not open file. Error: ' .. (err or ''))
+
+        os.execute(cmd .. '>"' .. tmpPath .. '"')
+        local folderName = file:read('l')
+        file:close()
+        os.remove(tmpPath)
+
+        return cleanZipFolderName(folderName)
     end
 
-    local folderName = pfile:lines()():gsub('/.*', '')
+    assert(pfile, 'Could not get folder name. Error: "' .. (err or '') .. '"')
+
+    local folderName = pfile:lines()()
     pfile:close()
 
-    return folderName
+    return cleanZipFolderName(folderName)
 end
 
 local function unzip(name)
