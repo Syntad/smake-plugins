@@ -164,7 +164,10 @@ local function installDependency(name, callback)
     if not exists('./dependencies') then
         run('mkdir ./dependencies')
     elseif exists('./dependencies/' .. name) then
-        print('Dependency "' .. name .. '" is already installed')
+        if smake.config.dependencyInstaller and smake.config.dependencyInstaller.log then
+            print('Dependency "' .. name .. '" is already installed')
+        end
+
         return
     end
 
