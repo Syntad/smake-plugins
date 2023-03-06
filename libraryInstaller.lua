@@ -24,6 +24,8 @@ local function deleteLibraries()
 end
 
 local function hasLibrary(name)
+    name = name:match('^smake/(.+)') or name
+
     return exists('./smake/library/' .. name .. '.lua')
 end
 
