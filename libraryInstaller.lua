@@ -24,7 +24,7 @@ local function deleteLibraries()
 end
 
 local function hasLibrary(name)
-    return exists('./smake/library/plugins/' .. name .. '.lua')
+    return exists('./smake/library/' .. name .. '.lua')
 end
 
 --- Installs a library based on the plugin name. Assumes getLibraries has been called.
