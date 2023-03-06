@@ -23,6 +23,10 @@ local function deleteLibraries()
     run('rm -rf ./smake-lsp-library-main')
 end
 
+local function hasLibrary(name)
+    return exists('./smake/library/plugins/' .. name .. '.lua')
+end
+
 --- Installs a library based on the plugin name. Assumes getLibraries has been called.
 local function addLibrary(name)
     name = name:match('^smake/(.+)') or name
@@ -45,9 +49,11 @@ function Plugin.Command(...)
 end
 
 local function customImport(name, global)
-    getLibraries()
-    addLibrary(name)
-    deleteLibraries()
+    if not hasLibrary(name) then
+        getLibraries()
+        addLibrary(name)
+        deleteLibraries()
+    end
 
     return import(name, global)
 end
