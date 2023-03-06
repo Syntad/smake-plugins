@@ -3,7 +3,7 @@ local function exists(file)
     return ok or code == 13, err
 end
 
-local function getLibraries()
+local function createFolder()
     if not exists('./smake') then
         run('mkdir ./smake')
     end
@@ -11,16 +11,6 @@ local function getLibraries()
     if not exists('./smake/library') then
         run('mkdir ./smake/library')
     end
-
-    run(
-        'curl "https://github.com/Syntad/smake-lsp-library/archive/refs/heads/main.zip" -L -o ./library.zip',
-        'tar -xf ./library.zip',
-        'rm ./library.zip'
-    )
-end
-
-local function deleteLibraries()
-    run('rm -rf ./smake-lsp-library-main')
 end
 
 local function hasLibrary(name)
@@ -33,29 +23,26 @@ end
 local function addLibrary(name)
     name = name:match('^smake/(.+)') or name
 
-    if exists('./smake-lsp-library-main/library/plugins/' .. name .. '.lua') then
-        run('mv ./smake-lsp-library-main/library/plugins/' .. name .. '.lua ./smake/library/' .. name .. '.lua')
+    if hasLibrary(name) then
+        return
     end
+
+    run('curl "https://raw.githubusercontent.com/Syntad/smake-lsp-library/main/library/plugins/' .. name .. '.lua" -o ./smake/library/' .. name .. '.lua')
 end
 
 function Plugin.Command(...)
     local names = {...}
 
-    getLibraries()
+    createFolder()
 
     for _, name in next, names do
         addLibrary(name)
     end
-
-    deleteLibraries()
 end
 
 local function customImport(name, global)
-    if not hasLibrary(name) then
-        getLibraries()
-        addLibrary(name)
-        deleteLibraries()
-    end
+    createFolder()
+    addLibrary(name)
 
     return import(name, global)
 end
