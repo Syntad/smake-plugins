@@ -124,9 +124,11 @@ end
 
 local function build()
     local c = os.clock()
-    smake.spinner.start(' Building')
+    smake.spinner.setText('Building')
+    smake.spinner.start()
     run(makeCommand())
-    smake.spinner.stop('✅ Built in ' .. (os.clock() - c) * 1000 .. 'ms')
+    smake.spinner.stop()
+    print('✅ Built in ' .. (os.clock() - c) * 1000 .. 'ms')
 end
 
 local module = {
