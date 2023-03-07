@@ -1,3 +1,5 @@
+local config = smake.config.dependencyInstaller or {}
+
 ---@diagnostic disable: undefined-global
 -- #region Util
 
@@ -11,7 +13,7 @@ local function exists(file)
 end
 
 local function download(url, path)
-    run('curl "' .. url .. '" -L -o "./' .. path .. '.zip"')
+    run('curl ' .. (config.silent and '-s ' or '') .. '"' .. url .. '" -L -o "./' .. path .. '.zip"')
 end
 
 local function cleanZipFolderName(name)
@@ -180,7 +182,7 @@ local function installDependency(name, callback)
     if not exists('./dependencies') then
         run('mkdir ./dependencies')
     elseif exists('./dependencies/' .. name) then
-        if smake.config.dependencyInstaller and smake.config.dependencyInstaller.log then
+        if config.log then
             print('Dependency "' .. name .. '" is already installed')
         end
 
