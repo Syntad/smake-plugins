@@ -1508,7 +1508,7 @@ end
 
 function enhancedSpinner.SetOptions(options)
     for name, value in next, options do
-        if name == 'symbols' and type(name) == 'string' then
+        if name == 'symbols' and type(value) == 'string' then
             assert(presets[value], 'Spinner preset "' .. value .. '" does not exist')
             smake.spinner.interval = presets[value].interval
             value = presets[value].frames
