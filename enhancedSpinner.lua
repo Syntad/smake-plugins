@@ -57,17 +57,27 @@ function enhancedSpinner.SetOptions(options)
         enhancedSpinner.SetColor(options.color)
     end
 
-    return enhancedSpinner
-end
-
-function enhancedSpinner.Start(text)
-    smake.spinner.start(text)
+    if options.text then
+        enhancedSpinner.SetText(options.text)
+    end
 
     return enhancedSpinner
 end
 
-function enhancedSpinner.Stop(text)
-    smake.spinner.stop(text)
+function enhancedSpinner.SetText(text)
+    smake.spinner.setText(text)
+
+    return enhancedSpinner
+end
+
+function enhancedSpinner.Start()
+    smake.spinner.start()
+
+    return enhancedSpinner
+end
+
+function enhancedSpinner.Stop()
+    smake.spinner.stop()
 
     return enhancedSpinner
 end
