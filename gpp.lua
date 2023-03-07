@@ -8,6 +8,9 @@ local settings = {
     output = nil
 }
 
+smake.spinner.symbols = { '◜', '◝', '◞', '◟' }
+smake.spinner.interval = 0.15
+
 local function standard(std)
     settings.standard = std
 end
@@ -121,8 +124,9 @@ end
 
 local function build()
     local c = os.clock()
+    smake.spinner.start(' Building')
     run(makeCommand())
-    print('Built in ' .. (os.clock() - c) * 1000 .. 'ms')
+    smake.spinner.stop('✅ Built in ' .. (os.clock() - c) * 1000 .. 'ms')
 end
 
 local module = {
