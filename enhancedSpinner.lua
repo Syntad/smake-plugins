@@ -70,14 +70,22 @@ function enhancedSpinner.SetText(text)
     return enhancedSpinner
 end
 
-function enhancedSpinner.Start()
+function enhancedSpinner.Start(text)
+    if text then
+        enhancedSpinner.SetText(text)
+    end
+
     smake.spinner.start()
 
     return enhancedSpinner
 end
 
-function enhancedSpinner.Stop()
+function enhancedSpinner.Stop(text)
     smake.spinner.stop()
+
+    if text then
+        print(text)
+    end
 
     return enhancedSpinner
 end
