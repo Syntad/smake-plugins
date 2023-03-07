@@ -8,7 +8,7 @@ local settings = {
     output = nil
 }
 
-smake.spinner.symbols = { '◜', '◝', '◞', '◟' }
+smake.spinner.symbols = { '🕛 ', '🕐 ', '🕑 ', '🕒 ', '🕓 ', '🕔 ', '🕕 ', '🕖 ', '🕗 ', '🕘 ', '🕙 ', '🕚 ' }
 smake.spinner.interval = 0.15
 
 local function standard(std)
