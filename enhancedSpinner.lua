@@ -1487,6 +1487,18 @@ for _, color in next, colors do
     validColors[color] = true
 end
 
+local function formatEndText(text)
+    if not text then
+        return
+    end
+
+    if enhancedSpinner.prefix then
+        text = enhancedSpinner.prefix .. ' ' .. text
+    end
+
+    return text
+end
+
 function enhancedSpinner.SetColor(color)
     if not spinner.symbols then
         return
@@ -1512,6 +1524,8 @@ function enhancedSpinner.SetOptions(options)
             assert(presets[value], 'Spinner preset"' .. value .. '" does not exist')
             smake.spinner.interval = presets[value].interval
             value = presets[value].frames
+        elseif name == 'prefix' then
+            enhancedSpinner.prefix = value
         end
 
         smake.spinner[name] = value
@@ -1552,6 +1566,12 @@ function enhancedSpinner.Stop(text)
     end
 
     return enhancedSpinner
+end
+
+function enhancedSpinner.Call(func, startText, endText, ...)
+    enhancedSpinner.Start(startText)
+    func(...)
+    enhancedSpinner.Stop(formatEndText(endText))
 end
 
 function Plugin.Import()
