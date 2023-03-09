@@ -1523,14 +1523,14 @@ function enhancedSpinner.SetOptions(options)
         if name == 'symbols' and type(name) == 'string' then
             assert(presets[value], 'Spinner preset"' .. value .. '" does not exist')
             smake.spinner.interval = presets[value].interval
-            value = presets[value].frames
+            smake.spinner.symbols = presets[value].frames
         elseif name == 'prefix' then
             enhancedSpinner.prefix = value
+        else
+            smake.spinner[name] = value
         end
-
-        smake.spinner[name] = value
     end
-
+    
     if options.color then
         enhancedSpinner.SetColor(options.color)
     end
