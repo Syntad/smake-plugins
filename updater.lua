@@ -5,7 +5,7 @@ function Plugin.Command()
         'curl "https://github.com/Syntad/smake-plugins/archive/refs/heads/main.zip" -L -o ./plugins.zip',
         'unzip -q ./plugins.zip',
         'rm ./plugins.zip',
-        'rm -rf "' .. pluginsFolder .. '/smake"',
-        'mv ./smake-plugins-main "' .. pluginsFolder .. '/smake"'
+        'rm -rf "' .. pluginsFolder .. '/smake/*"',
+        'mv ./smake-plugins-main/*.lua "' .. pluginsFolder .. '/smake"'
     )
 end
