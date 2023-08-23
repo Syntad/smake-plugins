@@ -12,16 +12,11 @@ local function exists(file)
     return ok or code == 13, err
 end
 
-local function download(url, path)
-    run('curl ' .. (config.silent and '-s ' or '') .. '"' .. url .. '" -L -o "./' .. path .. '.zip"')
+local function download(url, path, extension)
+    run('curl ' .. (config.silent and '-s ' or '') .. '"' .. url .. '" -L -o "./' .. path .. '"' .. extension)
 end
 
-local function cleanZipFolderName(name)
-    return name:gsub('/.*', '')
-end
-
-local function getZipFolderName(path)
-    local cmd = 'tar -tf "./' .. path ..  '.zip" | head -1'
+local function popen(cmd)
     local success, pfile, err = pcall(io.popen, cmd)
 
     if not success then
@@ -30,24 +25,39 @@ local function getZipFolderName(path)
         assert(file, 'Could not open file. Error: ' .. (err or ''))
 
         os.execute(cmd .. '>"' .. tmpPath .. '"')
-        local folderName = file:read('l')
+        local line = file:read('l')
         file:close()
         os.remove(tmpPath)
 
-        return cleanZipFolderName(folderName)
+        return line
     end
 
-    assert(pfile, 'Could not get folder name. Error: "' .. (err or '') .. '"')
+    assert(pfile, 'Could not execute popen. Error: "' .. (err or '') .. '"')
 
-    local folderName = pfile:lines()()
+    local line = pfile:lines()()
     pfile:close()
 
-    return cleanZipFolderName(folderName)
+    return line
+end
+
+local function getTarFolderName(path)
+    return popen('tar -tf "./' .. path ..  '.tar" | head -1'):gsub('/.*', '')
+end
+
+local function getZipFolderName(path)
+    return popen('unzip -qql "./' .. path ..  '.zip" | head -1'):match('(%S+)$'):gsub('/$', '')
+end
+
+local function untar(name)
+    run(
+        'tar -xf "./' .. name .. '.tar"',
+        'rm "./' .. name .. '.tar"'
+    )
 end
 
 local function unzip(name)
     run(
-        'tar -xf "./' .. name .. '.zip"',
+        'unzip -q "./' .. name .. '.zip"',
         'rm "./' .. name .. '.zip"'
     )
 end
@@ -67,6 +77,7 @@ function folder:ConcatenatePath(path)
 end
 
 function folder:CheckValidity()
+    print(self.path)
     if not self.valid or not exists(self.path) then
         error('Attempt to call a method on an invalid folder')
     end
@@ -165,13 +176,24 @@ function installer:MakeLibraryFolder()
     return path
 end
 
---- Downloads and unzips a zip from a URL
+--- Downloads and extracts a zip from a URL
 ---@param url any The url to download the zip from
 ---@return table A folder object for the unzipped folder
 function installer:DownloadAndUnzip(url)
-    download(url, self.name)
+    download(url, self.name, '.zip')
     local folderName = getZipFolderName(self.name)
     unzip(self.name)
+
+    return createFolder(self, folderName)
+end
+
+--- Downloads and extracts a tar file from a URL
+---@param url any The url to download the tar from
+---@return table A folder object for the extracted folder
+function installer:DownloadAndUntar(url)
+    download(url, self.name, '.tar')
+    local folderName = getTarFolderName(self.name)
+    untar(self.name)
 
     return createFolder(self, folderName)
 end
