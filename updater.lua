@@ -6,6 +6,7 @@ function Plugin.Command()
         'unzip -q ./plugins.zip',
         'rm ./plugins.zip',
         'rm -rf "' .. pluginsFolder .. '/smake/*"',
-        'mv ./smake-plugins-main/*.lua "' .. pluginsFolder .. '/smake"'
+        'mv ./smake-plugins-main/*.lua "' .. pluginsFolder .. '/smake"',
+        'rm -rf ./smake-plugins-main'
     )
 end
