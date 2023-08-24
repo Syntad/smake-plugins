@@ -1,12 +1,10 @@
-local pluginsFolder = import('smake/utils/fs').ConstantPaths.PluginsFolder
+import('smake/utils/fs', true)
 
 function Plugin.Command()
-    run(
-        'curl "https://github.com/Syntad/smake-plugins/archive/refs/heads/main.zip" -L -o ./plugins.zip',
-        'unzip -q ./plugins.zip',
-        'rm ./plugins.zip',
-        'rm -rf "' .. pluginsFolder .. '/smake"',
-        'mv ./smake-plugins-main/smake "' .. pluginsFolder .. '/smake"',
-        'rm -rf ./smake-plugins-main'
-    )
+    Download('https://github.com/Syntad/smake-plugins/archive/refs/heads/main.zip', './plugins.zip')
+    Unzip('./plugins.zip')
+    Delete('./plugins.zip')
+    DeleteFolder(ConstantPaths.PluginsFolder .. '/smake')
+    Move('./smake-plugins-main/smake', ConstantPaths.PluginsFolder .. '/smake')
+    DeleteFolder('./smake-plugins-main')
 end

@@ -1,60 +1,6 @@
+---@diagnostic disable: undefined-global
 local config = smake.config.dependencyInstaller or {}
 local fs = import('smake/utils/fs')
-
----@diagnostic disable: undefined-global
--- #region Util
-
-local function download(url, path, extension)
-    run('curl ' .. (config.silent and '-s ' or '') .. '"' .. url .. '" -L -o "./' .. path .. '"' .. extension)
-end
-
-local function popen(cmd)
-    local success, pfile, err = pcall(io.popen, cmd)
-
-    if not success then
-        local tmpPath = os.tmpname()
-        local file, err = io.open(tmpPath, 'w+')
-        assert(file, 'Could not open file. Error: ' .. (err or ''))
-
-        os.execute(cmd .. '>"' .. tmpPath .. '"')
-        local line = file:read('l')
-        file:close()
-        os.remove(tmpPath)
-
-        return line
-    end
-
-    assert(pfile, 'Could not execute popen. Error: "' .. (err or '') .. '"')
-
-    local line = pfile:lines()()
-    pfile:close()
-
-    return line
-end
-
-local function getTarFolderName(path)
-    return popen('tar -tf "./' .. path ..  '.tar" | head -1'):gsub('/.*', '')
-end
-
-local function getZipFolderName(path)
-    return popen('unzip -qql "./' .. path ..  '.zip" | head -1'):match('(%S+)$'):gsub('/$', '')
-end
-
-local function untar(name)
-    run(
-        'tar -xf "./' .. name .. '.tar"',
-        'rm "./' .. name .. '.tar"'
-    )
-end
-
-local function unzip(name)
-    run(
-        'unzip -q "./' .. name .. '.zip"',
-        'rm "./' .. name .. '.zip"'
-    )
-end
-
--- #endregion
 
 -- #region Folder Class
 
@@ -171,9 +117,10 @@ end
 ---@param url any The url to download the tar from
 ---@return table A folder object for the extracted folder
 function installer:DownloadAndUntar(url)
-    download(url, self.name, '.tar')
-    local folderName = getTarFolderName(self.name)
-    untar(self.name)
+    local path = self.name .. '.tar'
+    fs.Download(url, path)
+    local folderName = fs.GetTarFolderName(path)
+    fs.UntarAndDelete(path)
 
     return createFolder(self, folderName)
 end
@@ -183,14 +130,10 @@ end
 ---@param url any The url to download the zip from
 ---@return table A folder object for the unzipped folder
 function installer:DownloadAndUnzip(url)
-    -- Use tar -xf on Windows instead of unzip
-    if platform.is_windows then
-        return self:DownloadAndUntar(url)
-    end
-
-    download(url, self.name, '.zip')
-    local folderName = getZipFolderName(self.name)
-    unzip(self.name)
+    local path = self.name .. '.zip'
+    fs.Download(url, path)
+    local folderName = fs.GetZipFolderName(path)
+    fs.UnzipAndDelete(path)
 
     return createFolder(self, folderName)
 end
