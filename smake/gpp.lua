@@ -34,6 +34,21 @@ local function include(include, path, name)
     settings.linkNames[#settings.linkNames + 1] = name
 end
 
+local function link(folder, ...)
+    local links
+
+    if type(folder) == 'table' then
+        links = folder
+    else
+        settings.linkPaths[#settings.linkPaths + 1] = folder
+        links = {...}
+    end
+
+    for _, link in next, links do
+        settings.linkNames[#settings.linkNames + 1] = link
+    end
+end
+
 local function output(file)
     settings.output = file
 end
@@ -127,6 +142,7 @@ local module = {
     standard = standard,
     input = input,
     include = include,
+    link = link,
     output = output,
     flags = flags,
     build = build,
