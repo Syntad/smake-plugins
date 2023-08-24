@@ -1,16 +1,8 @@
 local config = smake.config.dependencyInstaller or {}
+local fs = import('smake/utils/fs')
 
 ---@diagnostic disable: undefined-global
 -- #region Util
-
-local function relPath(path)
-    return './' .. path
-end
-
-local function exists(file)
-    local ok, err, code = os.rename(file, file)
-    return ok or code == 13, err
-end
 
 local function download(url, path, extension)
     run('curl ' .. (config.silent and '-s ' or '') .. '"' .. url .. '" -L -o "./' .. path .. '"' .. extension)
@@ -77,8 +69,7 @@ function folder:ConcatenatePath(path)
 end
 
 function folder:CheckValidity()
-    print(self.path)
-    if not self.valid or not exists(self.path) then
+    if not self.valid or not fs.Exists(self.path) then
         error('Attempt to call a method on an invalid folder')
     end
 end
@@ -89,7 +80,7 @@ end
 --- @return folder self
 function folder:Move(relFrom, to)
     self:CheckValidity()
-    run('mv ' .. relPath(self:ConcatenatePath(relFrom)) .. ' ' .. relPath(to))
+    fs.Move(fs.RelativePath(self:ConcatenatePath(relFrom)), fs.RelativePath(to))
     return self
 end
 
@@ -123,7 +114,7 @@ end
 --- @return folder self
 function folder:Rename(newPath)
     self:CheckValidity()
-    run('mv ' .. relPath(self.path) .. ' ' .. relPath(newPath))
+    fs.Move(fs.RelativePath(self.path), fs.RelativePath(newPath))
     self.path = newPath
     return self
 end
@@ -132,7 +123,7 @@ end
 --- @return folder self
 function folder:Delete()
     self:CheckValidity()
-    run('rm -rf ' .. relPath(self.path))
+    fs.DeleteFolder(fs.RelativePath(self.path))
     self.valid = false
     return self
 end
@@ -155,14 +146,14 @@ end
 --- @param relFrom any A path relative to the dependency folder
 --- @param to any A path to move the item to
 function installer:Move(relFrom, to)
-    run('mv ' .. relPath(self:ConcatenatePath(relFrom)) .. ' ' .. relPath(to))
+    fs.Move(fs.RelativePath(self:ConcatenatePath(relFrom)), fs.RelativePath(to))
 end
 
 --- Creates an include folder in the dependency folder
 --- @return string Returns the path to the created folder
 function installer:MakeIncludeFolder()
-    local path = relPath(self:ConcatenatePath('include'))
-    run('mkdir ' .. path)
+    local path = fs.RelativePath(self:ConcatenatePath('include'))
+    fs.CreateFolder(path)
 
     return path
 end
@@ -170,8 +161,8 @@ end
 --- Creates a library folder in the dependency folder
 --- @return string Returns the path to the created folder
 function installer:MakeLibraryFolder()
-    local path = relPath(self:ConcatenatePath('lib'))
-    run('mkdir ' .. path)
+    local path = fs.RelativePath(self:ConcatenatePath('lib'))
+    fs.CreateFolder(path)
 
     return path
 end
@@ -200,10 +191,24 @@ end
 
 -- #endregion
 
+local function installDependencyPreset(name)
+    return 
+end
+
 local function installDependency(name, callback)
-    if not exists('./dependencies') then
+    if not callback then
+        local presetName, callback = import('smake/dependencyInstallers/' .. name:lower())
+
+        if presetName then
+            return InstallDependency(presetName, callback)
+        else
+            return print('Preset "' .. name .. '" does not exist.')
+        end
+    end
+
+    if not fs.Exists('./dependencies') then
         run('mkdir ./dependencies')
-    elseif exists('./dependencies/' .. name) then
+    elseif fs.Exists('./dependencies/' .. name) then
         if config.log then
             print('Dependency "' .. name .. '" is already installed')
         end
@@ -211,7 +216,7 @@ local function installDependency(name, callback)
         return
     end
 
-    run('mkdir ' .. relPath('dependencies/' .. name))
+    fs.CreateFolder(fs.RelativePath('dependencies/' .. name))
 
     callback(createInstaller(name))
 end
