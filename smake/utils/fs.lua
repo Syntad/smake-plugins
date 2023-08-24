@@ -12,7 +12,8 @@ local libraryFolder = smakeFolder .. localizePath('/library')
 
 -- Helpers
 
-local function popen(cmd)
+local function ExecuteCommand(cmd, read)
+    read = read or 'l'
     local success, pfile, err = pcall(io.popen, cmd)
 
     if not success then
@@ -21,19 +22,19 @@ local function popen(cmd)
         assert(file, 'Could not open file. Error: ' .. (err or ''))
 
         os.execute(cmd .. '>"' .. tmpPath .. '"')
-        local line = file:read('l')
+        local content = file:read(read)
         file:close()
         os.remove(tmpPath)
 
-        return line
+        return content
     end
 
     assert(pfile, 'Could not execute popen. Error: "' .. (err or '') .. '"')
 
-    local line = pfile:lines()()
+    local content = pfile:read(read)
     pfile:close()
 
-    return line
+    return content
 end
 
 -- Shared
@@ -85,7 +86,7 @@ local function UntarAndDelete(path)
 end
 
 local function GetTarFolderName(path)
-    return popen('tar -tf ' .. path ..  ' | head -1'):gsub('/.*', '')
+    return ExecuteCommand('tar -tf ' .. path ..  ' | head -1'):gsub('/.*', '')
 end
 
 -- Zip Utilities
@@ -108,7 +109,7 @@ local function GetZipFolderName(path)
         return GetTarFolderName(path)
     end
 
-    return popen('unzip -qql ' .. path ..  ' | head -1'):match('(%S+)$'):gsub('/$', '')
+    return ExecuteCommand('unzip -qql ' .. path ..  ' | head -1'):match('(%S+)$'):gsub('/$', '')
 end
 
 -- Downloads
@@ -137,6 +138,7 @@ function Plugin.Import()
         Unzip = Unzip,
         UnzipAndDelete = UnzipAndDelete,
         GetZipFolderName = GetZipFolderName,
-        Download = Download
+        Download = Download,
+        ExecuteCommand = ExecuteCommand
     }
 end
