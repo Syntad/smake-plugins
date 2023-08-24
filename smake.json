@@ -1,7 +1,3 @@
 {
-    "pluginsDirectory": "",
-    "defaultCommand": "build",
-    "aliases": {
-        "i": "install"
-    }
+    "pluginsDirectory": ""
 }
