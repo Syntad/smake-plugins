@@ -167,17 +167,6 @@ function installer:MakeLibraryFolder()
     return path
 end
 
---- Downloads and extracts a zip from a URL
----@param url any The url to download the zip from
----@return table A folder object for the unzipped folder
-function installer:DownloadAndUnzip(url)
-    download(url, self.name, '.zip')
-    local folderName = getZipFolderName(self.name)
-    unzip(self.name)
-
-    return createFolder(self, folderName)
-end
-
 --- Downloads and extracts a tar file from a URL
 ---@param url any The url to download the tar from
 ---@return table A folder object for the extracted folder
@@ -189,11 +178,24 @@ function installer:DownloadAndUntar(url)
     return createFolder(self, folderName)
 end
 
--- #endregion
 
-local function installDependencyPreset(name)
-    return 
+--- Downloads and extracts a zip from a URL
+---@param url any The url to download the zip from
+---@return table A folder object for the unzipped folder
+function installer:DownloadAndUnzip(url)
+    -- Use tar -xf on Windows instead of unzip
+    if platform.is_windows then
+        return self:DownloadAndUntar(url)
+    end
+
+    download(url, self.name, '.zip')
+    local folderName = getZipFolderName(self.name)
+    unzip(self.name)
+
+    return createFolder(self, folderName)
 end
+
+-- #endregion
 
 local function installDependency(name, callback)
     if not callback then
