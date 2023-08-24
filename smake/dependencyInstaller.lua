@@ -198,14 +198,10 @@ end
 -- #endregion
 
 local function installDependency(name, callback)
-    if not callback then
-        local presetName, callback = import('smake/dependencyInstallers/' .. name:lower())
+    callback = callback or import('smake/dependencyInstallers/' .. name:lower())
 
-        if presetName then
-            return InstallDependency(presetName, callback)
-        else
-            return print('Preset "' .. name .. '" does not exist.')
-        end
+    if not callback then
+        return
     end
 
     if not fs.Exists('./dependencies') then

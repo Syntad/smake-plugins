@@ -1,7 +1,6 @@
 function Plugin.Import()
-    return 'lua',
     --- @type fun(installer: installer)
-    function(installer)
+    return function(installer)
         local folder = installer:DownloadAndUntar('https://www.lua.org/ftp/lua-5.4.6.tar.gz')
         folder:RunIn('cd src && make' .. (platform.is_windows and ' mingw' or '') .. '> /dev/null > err.log')
 

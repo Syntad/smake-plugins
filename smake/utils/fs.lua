@@ -1,6 +1,6 @@
 local function localizePath(path)
     if platform.is_windows then
-        return path:gsub('/', '\\')
+        return path:gsub('[\\/]', '\\\\')
     else
         return path:gsub('\\', '/')
     end
