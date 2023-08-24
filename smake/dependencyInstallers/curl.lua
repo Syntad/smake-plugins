@@ -1,3 +1,5 @@
+local fs = import('smake/utils/fs')
+
 function Plugin.Import()
     --- @type fun(installer: installer)
     return function(installer)
