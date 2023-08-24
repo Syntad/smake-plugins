@@ -14,7 +14,13 @@ end
 --- Installs a library based on the plugin name. Assumes getLibraries has been called.
 local function addLibrary(name, global)
     name = name:match('^smake/(.+)') or name
-    local libraryPath = (global and globalLibrariesFolder or './smake/library/') .. name .. '.lua'
+    local librariesPath = (global and globalLibrariesFolder or './smake/library/')
+    local libraryPath = librariesPath .. name .. '.lua'
+    local directory = name:match('(.+)/')
+
+    if directory then
+        run('mkdir -p ' .. fs.ConcatenatePaths(librariesPath, directory))
+    end
 
     if not fs.Exists(libraryPath) then
         run('curl "https://raw.githubusercontent.com/Syntad/smake-lsp-library/main/library/plugins/' .. name .. '.lua" -o ' .. libraryPath)
