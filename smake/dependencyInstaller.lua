@@ -162,8 +162,17 @@ local function installDependency(name, callback)
     callback(createInstaller(name))
 end
 
+local function installDependencies(...)
+    local names = {...}
+
+    for _, name in next, names do
+        installDependency(name)
+    end
+end
+
 function Plugin.Import()
     return {
-        InstallDependency = installDependency
+        InstallDependency = installDependency,
+        InstallDependencies = installDependencies
     }
 end
