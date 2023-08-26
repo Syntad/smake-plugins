@@ -94,7 +94,7 @@ local function makeCommand()
     end
 
     for _, framework in next, settings.frameworks do
-        cmd = cmd .. ' -framework' .. framework
+        cmd = cmd .. ' -framework ' .. framework
     end
 
     for _, flag in next, settings.flags do
