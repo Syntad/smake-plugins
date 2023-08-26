@@ -83,7 +83,7 @@ local function GetZipFolderName(path)
         return GetTarFolderName(path)
     end
 
-    return utils.ExecuteCommand('unzip -qql ' .. path ..  ' | head -1'):match('(%S+)$'):gsub('/$', '')
+    return utils.ExecuteCommand('unzip -qql ' .. path ..  ' | head -1'):match('(%S+)/')
 end
 
 -- Downloads
