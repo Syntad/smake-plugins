@@ -4,6 +4,7 @@ local settings = {
     include = {},
     linkPaths = {},
     linkNames = {},
+    frameworks = {},
     flags = {},
     output = nil
 }
@@ -49,6 +50,14 @@ local function link(folder, ...)
     end
 end
 
+local function framework(...)
+    local frameworks = {...}
+
+    for _, framework in next, frameworks do
+        settings.frameworks[#settings.frameworks + 1] = framework
+    end
+end
+
 local function output(file)
     settings.output = file
 end
@@ -84,6 +93,10 @@ local function makeCommand()
         cmd = cmd .. ' -l' .. name
     end
 
+    for _, framework in next, settings.frameworks do
+        cmd = cmd .. ' -framework' .. framework
+    end
+
     for _, flag in next, settings.flags do
         cmd = cmd .. ' ' .. flag
     end
@@ -112,6 +125,10 @@ local function generateCompileFlags()
 
     for _, name in next, settings.linkNames do
         flags = flags .. '-l\n' .. name .. '\n'
+    end
+
+    for _, framework in next, settings.frameworks do
+        flags = flags .. ' -framework\n' .. framework .. '\n'
     end
 
     for _, flag in next, settings.flags do
@@ -143,6 +160,7 @@ local module = {
     input = input,
     include = include,
     link = link,
+    framework = framework,
     output = output,
     flags = flags,
     build = build,
