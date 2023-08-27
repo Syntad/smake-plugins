@@ -50,7 +50,7 @@ end
 ---@param path any A relative path to the lib file
 --- @return folder self
 function folder:MoveLibraryFile(path)
-    self:Move(path, fs.ConcatenatePaths(self.installer:ConcatenatePath('lib'), path))
+    self:Move(path, fs.ConcatenatePaths(self.installer:MakeLibraryFolder(), path))
     return self
 end
 
