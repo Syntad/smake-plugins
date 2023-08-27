@@ -46,6 +46,14 @@ function folder:MoveLibrary(path)
     return self
 end
 
+--- Moves the library file to the dependency library folder
+---@param path any A relative path to the lib file
+--- @return folder self
+function folder:MoveLibraryFile(path)
+    self:Move(path, fs.ConcatenatePaths(self.installer:ConcatenatePath('lib'), path))
+    return self
+end
+
 --- Run commmand(s) in the folder
 ---@param ... string The commands to run
 --- @return folder self
@@ -99,7 +107,10 @@ end
 --- @return string Returns the path to the created folder
 function installer:MakeIncludeFolder()
     local path = fs.RelativePath(self:ConcatenatePath('include'))
-    fs.CreateFolder(path)
+
+    if not fs.Exists(path) then
+        fs.CreateFolder(path)
+    end
 
     return path
 end
@@ -108,7 +119,10 @@ end
 --- @return string Returns the path to the created folder
 function installer:MakeLibraryFolder()
     local path = fs.RelativePath(self:ConcatenatePath('lib'))
-    fs.CreateFolder(path)
+
+    if not fs.Exists(path) then
+        fs.CreateFolder(path)
+    end
 
     return path
 end
@@ -124,7 +138,6 @@ function installer:DownloadAndUntar(url)
 
     return createFolder(self, folderName)
 end
-
 
 --- Downloads and extracts a zip from a URL
 ---@param url any The url to download the zip from
