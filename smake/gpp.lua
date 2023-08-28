@@ -21,6 +21,28 @@ local function input(...)
     end
 end
 
+local function inputr(folder, extension)
+    extension = extension or 'cpp'
+
+    if extension:sub(1, 1) ~= '.' then
+        extension = '.' .. extension
+    end
+
+    local fileList = utils.ExecuteCommand('ls ' .. folder, '*all')
+    local found = false
+
+    for file in fileList:gmatch('%S+') do
+        local path = fs.ConcatenatePaths(folder, file)
+
+        if fs.Exists(path .. '/') then
+            inputr(path, extension)
+        elseif not found and file:match(extension .. '$') then
+            input(fs.ConcatenatePaths(folder, '*' .. extension))
+            found = true
+        end
+    end
+end
+
 local function include(include, path, name)
     if type(include) == 'table' then
         for _, include in next, include do
@@ -158,6 +180,7 @@ end
 local module = {
     standard = standard,
     input = input,
+    inputr = inputr,
     include = include,
     link = link,
     framework = framework,
