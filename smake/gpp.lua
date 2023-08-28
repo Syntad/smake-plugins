@@ -2,6 +2,7 @@ local utils = import('smake/utils/utils')
 local fs = import('smake/utils/fs')
 
 local settings = {
+    compiler = 'g++',
     standard = nil,
     input = {},
     include = {},
@@ -11,6 +12,10 @@ local settings = {
     flags = {},
     output = nil
 }
+
+local function compiler(compiler)
+    settings.compiler = compiler
+end
 
 local function standard(std)
     settings.standard = std
@@ -96,7 +101,7 @@ local function flags(...)
 end
 
 local function makeCommand()
-    local cmd = 'g++';
+    local cmd = settings.compiler
 
     if settings.standard then
         cmd = cmd .. ' -std=' .. settings.standard
@@ -130,7 +135,7 @@ local function makeCommand()
         cmd = cmd .. ' -o' .. settings.output
     end
 
-    return cmd;
+    return cmd
 end
 
 local function generateCompileFlags()
@@ -181,6 +186,7 @@ local function build()
 end
 
 local module = {
+    compiler = compiler,
     standard = standard,
     input = input,
     inputr = inputr,
