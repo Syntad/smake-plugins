@@ -1,5 +1,5 @@
 local function ExecuteCommand(cmd, read)
-    read = read or 'l'
+    read = read or '*line'
     local success, pfile, err = pcall(io.popen, cmd)
 
     if not success then
