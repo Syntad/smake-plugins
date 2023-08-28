@@ -1,3 +1,6 @@
+local utils = import('smake/utils/utils')
+local fs = import('smake/utils/fs')
+
 local settings = {
     standard = nil,
     input = {},
