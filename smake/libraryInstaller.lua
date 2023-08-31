@@ -55,6 +55,14 @@ local function customImport(name, global)
     return import(name, global)
 end
 
+local function importGlobal(...)
+    local plugins = {...}
+
+    for _, name in next, plugins do
+        customImport(name, true)
+    end
+end
+
 function Plugin.Import()
-    return customImport
+    return customImport, importGlobal
 end
