@@ -64,8 +64,8 @@ function folder:MoveHeaders(path, folderName)
     local includePath = self.installer:MakeIncludeFolder()
 
     if folderName then
-        fs.CreateFolder(includePath)
         includePath = fs.ConcatenatePaths(includePath, folderName)
+        fs.CreateFolder(includePath)
     end
 
     path = path or '.'
