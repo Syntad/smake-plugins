@@ -42,9 +42,17 @@ end
 
 --- Moves the include folder to the dependency folder
 --- @param path any A relative path to the include folder or nil for `include`
+--- @param folderName any An optional name for the include directory. For example if you set this to `test` your include folder will be `include/test/*`. 
 --- @return folder self
-function folder:MoveIncludeFolder(path)
-    self:Move(path or 'include', self.installer:ConcatenatePath('include'))
+function folder:MoveIncludeFolder(path, folderName)
+    local includePath = self.installer:ConcatenatePath('include')
+
+    if folderName then
+        fs.CreateFolder(includePath)
+        includePath = fs.ConcatenatePaths(includePath, folderName)
+    end
+
+    self:Move(path or 'include', includePath)
     return self
 end
 
@@ -69,7 +77,7 @@ end
 ---@param path any A relative path to the lib file
 --- @return folder self
 function folder:MoveLibrary(path)
-    self:Move(path, fs.ConcatenatePaths(self.installer:MakeLibraryFolder(), path))
+    self:Move(path, fs.ConcatenatePaths(self.installer:MakeLibraryFolder(), path:match('([^/]-)$')))
     return self
 end
 
