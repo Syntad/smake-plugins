@@ -58,10 +58,18 @@ end
 
 --- Moves all headers from a folder to the include folder
 --- @param path string The path to move all .h and .hpp files from or nil for the folder path
+--- @param folderName any An optional name for the include directory. For example if you set this to `test` your include folder will be `include/test/*`.
 --- @return folder self
-function folder:MoveHeaders(path)
+function folder:MoveHeaders(path, folderName)
+    local includePath = self.installer:MakeIncludeFolder()
+
+    if folderName then
+        fs.CreateFolder(includePath)
+        includePath = fs.ConcatenatePaths(includePath, folderName)
+    end
+
     path = path or '.'
-    self:Move(fs.ConcatenatePaths(path, '*.h') .. ' ' .. fs.ConcatenatePaths(path, '*.hpp'), self.installer:MakeIncludeFolder())
+    self:Move(fs.ConcatenatePaths(path, '*.h') .. ' ' .. fs.ConcatenatePaths(path, '*.hpp'), includePath)
     return self
 end
 
