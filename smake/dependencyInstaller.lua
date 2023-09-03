@@ -30,18 +30,37 @@ function folder:Move(relFrom, to)
     return self
 end
 
+--- Copies a file from the folder to another path following symbolic links
+--- @param relFrom any A path relative to the folder
+--- @param to any A path to move the item to
+--- @return folder self
+function folder:Copy(relFrom, to)
+    self:CheckValidity()
+    fs.Copy(fs.RelativePath(self:ConcatenatePath(relFrom)), fs.RelativePath(to))
+    return self
+end
+
 --- Moves the include folder to the dependency folder
 --- @param path any A relative path to the include folder or nil for `include`
 --- @return folder self
-function folder:MoveInclude(path)
+function folder:MoveIncludeFolder(path)
     self:Move(path or 'include', self.installer:ConcatenatePath('include'))
+    return self
+end
+
+--- Moves all headers from a folder to the include folder
+--- @param path string The path to move all .h and .hpp files from or nil for the folder path
+--- @return folder self
+function folder:MoveHeaders(path)
+    path = path or '.'
+    self:Move(fs.ConcatenatePaths(path, '*.h') .. ' ' .. fs.ConcatenatePaths(path, '*.hpp'), self.installer:MakeIncludeFolder())
     return self
 end
 
 --- Moves the library folder to the dependency folder
 ---@param path any A relative path to the lib folder or nil for `lib`
 --- @return folder self
-function folder:MoveLibrary(path)
+function folder:MoveLibraryFolder(path)
     self:Move(path or 'lib', self.installer:ConcatenatePath('lib'))
     return self
 end
@@ -49,8 +68,17 @@ end
 --- Moves the library file to the dependency library folder
 ---@param path any A relative path to the lib file
 --- @return folder self
-function folder:MoveLibraryFile(path)
+function folder:MoveLibrary(path)
     self:Move(path, fs.ConcatenatePaths(self.installer:MakeLibraryFolder(), path))
+    return self
+end
+
+--- Moves all libraries from a folder to the library folder
+--- @param path string The path to move all .a, .so, and .dylib files from or nil for the folder path
+--- @return folder self
+function folder:MoveLibraries(path)
+    path = path or '.'
+    self:Move(fs.ConcatenatePaths(path, '*.a') .. ' ' .. fs.ConcatenatePaths(path, '*.so') .. ' ' .. fs.ConcatenatePaths(path, '*.dylib'), self.installer:MakeLibraryFolder())
     return self
 end
 

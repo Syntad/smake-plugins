@@ -3,12 +3,8 @@ function Plugin.Import()
     return function(installer)
         local folder = installer:DownloadAndUnzip('https://github.com/madler/zlib/archive/refs/heads/develop.zip')
         folder:RunIn('perl configure && make')
-
-        folder:Move('*.h', installer:MakeIncludeFolder())
-
-        local libFolder = installer:MakeLibraryFolder()
-        folder:Move('*.a', libFolder)
-
+        folder:MoveHeaders()
+        folder:MoveLibraries()
         folder:Delete()
     end
 end

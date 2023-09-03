@@ -4,12 +4,10 @@ function Plugin.Import()
         local folder = installer:DownloadAndUnzip('https://github.com/zlib-ng/minizip-ng/archive/refs/heads/master.zip')
         folder:RunIn('cmake . -DMZ_DECOMPRESS_ONLY=ON -DMZ_FETCH_LIBS=ON -DMZ_FORCE_FETCH_LIBS=ON')
         folder:RunIn('make')
+        folder:MoveHeaders()
 
         local lib = installer:MakeLibraryFolder()
-        folder:Move('*.h', installer:MakeIncludeFolder())
-
-        -- Move libbzip2 and libminizip
-        folder:Move('*.a', lib)
+        folder:MoveLibraries()
 
         -- Build and move zstd
         folder:RunIn('cd third_party/zstd && make')
