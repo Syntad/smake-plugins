@@ -22,6 +22,10 @@ local function Move(from, to)
     run('mv ' .. from .. ' ' .. to)
 end
 
+local function Copy(from, to)
+    run('cp -L ' .. from .. ' ' .. to)
+end
+
 -- Folders
 
 local function CreateFolder(path)
@@ -104,6 +108,7 @@ function Plugin.Import()
         Delete = Delete,
         DeleteFolder = DeleteFolder,
         Move = Move,
+        Copy = Copy,
         RelativePath = RelativePath,
         ConcatenatePaths = ConcatenatePaths,
         Untar = Untar,
