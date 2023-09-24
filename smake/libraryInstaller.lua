@@ -13,7 +13,12 @@ end
 
 --- Installs a library based on the plugin name. Assumes getLibraries has been called.
 local function addLibrary(name, global)
-    name = name:match('^smake/(.+)') or name
+    name = name:match('^smake/(.+)')
+
+    if not name then
+        return
+    end
+
     local librariesPath = (global and globalLibrariesFolder or './smake/library/')
     local libraryPath = librariesPath .. name .. '.lua'
     local directory = name:match('(.+)/')
