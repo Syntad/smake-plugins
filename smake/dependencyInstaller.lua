@@ -72,6 +72,7 @@ function folder:MoveHeaders(path, folderName)
     path = path or '.'
     self:Move(fs.ConcatenatePaths(path, '*.h'), includePath)
     self:Move(fs.ConcatenatePaths(path, '*.hpp'), includePath)
+    self:Move(fs.ConcatenatePaths(path, '*.hh'), includePath)
 
     return self
 end
