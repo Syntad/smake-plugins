@@ -1,6 +1,7 @@
 ---@diagnostic disable: undefined-global
 local config = smake.config.dependencyInstaller or {}
 local fs = import('smake/utils/fs')
+local utils = import('smake/utils/utils')
 
 -- #region Folder Class
 
@@ -193,6 +194,16 @@ function installer:DownloadAndUnzip(url)
     fs.Download(url, path)
     local folderName = fs.GetZipFolderName(path)
     fs.UnzipAndDelete(path)
+
+    return createFolder(self, folderName)
+end
+
+--- Downloads a git repository
+---@param url any The url to clone the repo from
+---@return table A folder object for the unzipped folder
+function installer:GitClone(url)
+    local folderName = url:match('[^/%s]+$')
+    run('git clone ' .. url)
 
     return createFolder(self, folderName)
 end
