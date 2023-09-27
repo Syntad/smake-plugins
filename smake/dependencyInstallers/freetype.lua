@@ -6,7 +6,7 @@ function Plugin.Import()
         folder:RunIn('sh autogen.sh && sh configure --without-harfbuzz')
         folder:RunIn('make')
 
-        InstallDependencies('harfbuzz', 'libpng', 'brotli', 'zlib')
+        InstallDependencies('harfbuzz', 'libpng', 'brotli', 'zlib', 'bzip2')
 
         folder:RunIn('sh configure')
         folder:RunIn('make')
