@@ -64,7 +64,7 @@ local function UntarAndDelete(path)
 end
 
 local function GetTarFolderName(path)
-    return utils.ExecuteCommand('tar -tf ' .. path ..  ' | head -1'):gsub('/.*', '')
+    return utils.ExecuteCommand('tar -tf ' .. path ..  ' | head -1'):read('*line'):gsub('/.*', '')
 end
 
 -- Zip Utilities
@@ -87,7 +87,7 @@ local function GetZipFolderName(path)
         return GetTarFolderName(path)
     end
 
-    return utils.ExecuteCommand('unzip -qql ' .. path ..  ' | head -1'):match('(%S+)/')
+    return utils.ExecuteCommand('unzip -qql ' .. path ..  ' | head -1'):read('*line'):match('(%S+)/')
 end
 
 -- Downloads

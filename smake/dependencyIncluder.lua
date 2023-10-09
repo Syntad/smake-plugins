@@ -16,10 +16,10 @@ local function includeDependency(name)
     end
 
     if Exists(libFolder) then
-        local libraries = ExecuteCommand('ls ' .. libFolder, '*all')
+        local libraries = ExecuteCommand('ls ' .. libFolder)
         local names = {}
 
-        for lib in libraries:gmatch('%S+') do
+        for lib in libraries:lines() do
             names[#names + 1] = lib:match('lib([^%.]+)%.')
         end
 

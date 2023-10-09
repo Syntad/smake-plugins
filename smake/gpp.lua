@@ -44,10 +44,10 @@ function compiler:inputr(folder, extension)
         extension = '.' .. extension
     end
 
-    local fileList = utils.ExecuteCommand('ls ' .. folder, '*all')
+    local fileList = utils.ExecuteCommand('ls ' .. folder)
     local found = false
 
-    for file in fileList:gmatch('%S+') do
+    for file in fileList:lines() do
         local path = fs.ConcatenatePaths(folder, file)
 
         if fs.Exists(path .. '/') then
