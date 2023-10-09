@@ -1,78 +1,228 @@
----@meta
+local utils = import('smake/utils/utils')
+local fs = import('smake/utils/fs')
 
----@diagnostic disable: duplicate-set-field
+local function bind(method, class)
+    return function(...)
+        return method(class, ...)
+    end
+end
 
----@class compiler
----@field options table The compiler options used to generate the build command
-compiler = {}
+local compiler = {
+    defaultOptions = {
+        compiler = 'g++',
+        standard = nil,
+        input = {},
+        include = {},
+        linkPaths = {},
+        linkNames = {},
+        frameworks = {},
+        flags = {},
+        output = nil
+    }
+}
 
----Sets the compiler. Generally only used to change from `g++` to `gcc`
----@param compiler string The name of the compiler, defaults to `g++`
-function compiler.compiler(compiler)end
+function compiler:compiler(compiler)
+    self.options.compiler = compiler
+end
 
----Specifies the c++ standard. This is equivalent to the `-std=<std>`
----@param std string The c++ standard
-function compiler.standard(std) end
+function compiler:standard(std)
+    self.options.standard = std
+end
 
----Specifies the input path(s). This is equivalent to `<name1> <name2> ...`
----@param ... string The input paths
-function compiler.input(...) end
+function compiler:input(...)
+    local args = { ... }
 
----Inputs files from folders recursively. This is equivalent to `<folder>/*.<extension>` for any folders that contain 1 or more of a file with the specified extension.
----@param folder string The folder to search
----@param extension string? The extension to include, or 'cpp' if nil
-function compiler.inputr(folder, extension) end
+    for _, file in next, args do
+        self.options.input[#self.options.input + 1] = file
+    end
+end
 
----Adds an include folder, possibly a library path, and possibly a library name. This is equivalent to `-I<includePath> -L<libPath> -l<libName>`
----@param includePath string The path to the include folder
----@param libPath? string The path to the lib folder
----@param libName? string The name of a lib file to load
----@overload fun(paths: table)
-function compiler.include(includePath, libPath, libName) end
+function compiler:inputr(folder, extension)
+    extension = extension or 'cpp'
 
----Include multiple folders. This is equivalent to `-I<includePath>` for all paths
----@param paths table A table of include paths
-function compiler.include(paths) end
+    if extension:sub(1, 1) ~= '.' then
+        extension = '.' .. extension
+    end
 
----Adds a library folder and links all names
----@param libPath? string The path to the lib folder
----@param ... string The names to link
----@overload fun(names: table)
-function compiler.link(libPath, ...) end
+    local fileList = utils.ExecuteCommand('ls ' .. folder, '*all')
+    local found = false
 
----Link multiple files. This is equivalent to `-l<name>` for all names
----@param names table A table of names to link
-function compiler.link(names) end
+    for file in fileList:gmatch('%S+') do
+        local path = fs.ConcatenatePaths(folder, file)
 
----Link MacOS framework(s). This is equivalent to `-framework<frameworkName>` for all frameworks
----@param ... string A list of frameworks to link.
-function compiler.framework(...) end
+        if fs.Exists(path .. '/') then
+            self:inputr(path, extension)
+        elseif not found and file:match(extension .. '$') then
+            self:input(fs.ConcatenatePaths(folder, '*' .. extension))
+            found = true
+        end
+    end
+end
 
----Specifies the output path. This is equivalent to `-o<path>`
----@param path string The path to output to
-function compiler.output(path) end
+function compiler:include(include, path, name)
+    local options = self.options
 
----Adds flags to the g++ command. This is equivalent to `<flags>`
----@param ... string The flags to append to the build command
-function compiler.flags(...) end
+    if type(include) == 'table' then
+        for _, include in next, include do
+            options.include[#options.include + 1] = include
+        end
 
----Runs the finalized build command
-function compiler.compile() end
+        return
+    end
 
----Generates `compile_flags.txt` for clangd.
-function compiler.generateCompileFlags() end
+    options.include[#options.include + 1] = include
+    options.linkPaths[#options.linkPaths + 1] = path
+    options.linkNames[#options.linkNames + 1] = name
+end
 
----Makes all functions global
-function compiler:makeGlobal()end
+function compiler:link(folder, ...)
+    local links
 
-compiler = compiler.compiler
-standard = compiler.standard
-input = compiler.input
-inputr = compiler.inputr
-include = compiler.include
-link = compiler.link
-framework = compiler.framework
-output = compiler.output
-flags = compiler.flags
-compile = compiler.compile
-generateCompileFlags = compiler.generateCompileFlags
+    if type(folder) == 'table' then
+        links = folder
+    else
+        self.options.linkPaths[#self.options.linkPaths + 1] = folder
+        links = {...}
+    end
+
+    for _, link in next, links do
+        self.options.linkNames[#self.options.linkNames + 1] = link
+    end
+end
+
+function compiler:framework(...)
+    local frameworks = {...}
+
+    for _, framework in next, frameworks do
+        self.options.frameworks[#self.options.frameworks + 1] = framework
+    end
+end
+
+function compiler:output(file)
+    self.options.output = file
+end
+
+function compiler:flags(...)
+    local args = { ... }
+
+    for _, flag in next, args do
+        self.options.flags[#self.options.flags + 1] = flag
+    end
+end
+
+function compiler:makeCommand()
+    local options = self.options
+    local cmd = options.compiler
+
+    if options.standard then
+        cmd = cmd .. ' -std=' .. options.standard
+    end
+
+    for _, input in next, options.input do
+        cmd = cmd .. ' ' .. input
+    end
+
+    for _, include in next, options.include do
+        cmd = cmd .. ' -I' .. include
+    end
+
+    for _, link in next, options.linkPaths do
+        cmd = cmd .. ' -L' .. link
+    end
+
+    for _, name in next, options.linkNames do
+        cmd = cmd .. ' -l' .. name
+    end
+
+    for _, framework in next, options.frameworks do
+        cmd = cmd .. ' -framework ' .. framework
+    end
+
+    for _, flag in next, options.flags do
+        cmd = cmd .. ' ' .. flag
+    end
+
+    if options.output then
+        cmd = cmd .. ' -o' .. options.output
+    end
+
+    return cmd
+end
+
+function compiler:generateCompileFlags()
+    local options = self.options
+    local flags = ''
+
+    if options.standard then
+        flags = flags .. '-std=' .. options.standard .. '\n'
+    end
+
+    for _, include in next, options.include do
+        flags = flags .. '-I\n' .. include .. '\n'
+    end
+
+    for _, link in next, options.linkPaths do
+        flags = flags .. '-L\n' .. link .. '\n'
+    end
+
+    for _, name in next, options.linkNames do
+        flags = flags .. '-l\n' .. name .. '\n'
+    end
+
+    for _, framework in next, options.frameworks do
+        flags = flags .. ' -framework\n' .. framework .. '\n'
+    end
+
+    for _, flag in next, options.flags do
+        for f in flag:gmatch('%S+') do
+            flags = flags .. f .. '\n'
+        end
+    end
+
+    if options.output then
+        flags = flags .. '-o\n' .. options.output .. '\n'
+    end
+
+    local file = io.open('compile_flags.txt', 'w+')
+
+    if file then
+        file:write(flags)
+        file:close()
+    else
+        print('Could not open compile_flags.txt for writing')
+    end
+end
+
+function compiler:compile()
+    run(self:makeCommand())
+end
+
+function compiler:makeGlobal()
+    for i, v in next, compiler do
+        if type(v) == 'function' then
+            _G[i] = bind(v, self)
+        end
+    end
+end
+
+local function tableClone(tbl)
+    local clone = {}
+
+    for i, v in next, tbl do
+        if type(v) == 'table' then
+            clone[i] = tableClone(v)
+        else
+            clone[i] = v
+        end
+    end
+
+    return clone
+end
+
+function Plugin.Import()
+    return function()
+        return setmetatable({
+            options = tableClone(compiler.defaultOptions)
+        }, { __index = compiler })
+    end
+end
