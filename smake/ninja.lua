@@ -8,8 +8,7 @@ local ninjaGen = {
     deps = gcc
 rule link
     command = $cxx -L$builddir -o $out $in $libs
-    description = LINK $out
-    ]]
+    description = LINK $out]]
 }
 
 -- Helpers
@@ -93,7 +92,7 @@ function ninjaGen:generateBuildFile(buildDirectory)
     self:writeVariable('cflags', self:generateCFlags())
     self:writeVariable('libs', self:generateLibs())
 
-    self.file:write(self.mainRules)
+    self.file:write(self.mainRules .. '\n')
 
     local inputFiles = self:getInputFiles()
     for _, input in next, inputFiles do
