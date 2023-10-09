@@ -1,8 +1,6 @@
 local commandResult = {}
 
 function commandResult:__gc()
-    print('Freeing command result')
-
     if not self.file or self.closed then
         return
     end

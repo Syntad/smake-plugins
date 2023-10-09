@@ -1,4 +1,5 @@
 local globalLibrariesFolder = import('smake/utils/fs').ConstantPaths.LibraryFolder .. '/'
+local utils = import('smake/utils/utils')
 local fs = import('smake/utils/fs')
 
 local function createFolders()
@@ -21,14 +22,19 @@ local function addLibrary(name, global)
 
     local librariesPath = (global and globalLibrariesFolder or './smake/library/')
     local libraryPath = librariesPath .. name .. '.lua'
-    local directory = name:match('(.+)/')
-
-    if directory then
-        run('mkdir -p ' .. fs.ConcatenatePaths(librariesPath, directory))
-    end
 
     if not fs.Exists(libraryPath) then
-        run('curl "https://raw.githubusercontent.com/Syntad/smake-lsp-library/main/library/plugins/' .. name .. '.lua" -o ' .. libraryPath)
+        if utils.ExecuteCommand('curl -s "https://raw.githubusercontent.com/Syntad/smake-lsp-library/main/library/plugins/' .. name .. '.lua"'):read('*line') == '404: Not Found' then
+            return
+        end
+
+        local directory = name:match('(.+)/')
+
+        if directory then
+            run('mkdir -p ' .. fs.ConcatenatePaths(librariesPath, directory))
+        end
+
+        run('curl -s "https://raw.githubusercontent.com/Syntad/smake-lsp-library/main/library/plugins/' .. name .. '.lua" -o ' .. libraryPath)
     end
 end
 
