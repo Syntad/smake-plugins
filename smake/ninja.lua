@@ -78,7 +78,7 @@ function ninja:writeBuildRule(input)
     self.buildRules = self.buildRules .. '$builddir/' .. fileName .. '.o '
 end
 
-function ninja:compile(buildDirectory)
+function ninja:generateBuildFile(buildDirectory)
     buildDirectory = buildDirectory or '.'
 
     self.file = io.open('build.ninja', 'w+')
