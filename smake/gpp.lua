@@ -1,218 +1,78 @@
-local utils = import('smake/utils/utils')
-local fs = import('smake/utils/fs')
+---@meta
 
-local settings = {
-    compiler = 'g++',
-    standard = nil,
-    input = {},
-    include = {},
-    linkPaths = {},
-    linkNames = {},
-    frameworks = {},
-    flags = {},
-    output = nil
-}
+---@diagnostic disable: duplicate-set-field
 
-local function compiler(compiler)
-    settings.compiler = compiler
-end
+---@class compiler
+---@field options table The compiler options used to generate the build command
+compiler = {}
 
-local function standard(std)
-    settings.standard = std
-end
+---Sets the compiler. Generally only used to change from `g++` to `gcc`
+---@param compiler string The name of the compiler, defaults to `g++`
+function compiler.compiler(compiler)end
 
-local function input(...)
-    local args = { ... }
+---Specifies the c++ standard. This is equivalent to the `-std=<std>`
+---@param std string The c++ standard
+function compiler.standard(std) end
 
-    for _, file in next, args do
-        settings.input[#settings.input + 1] = file
-    end
-end
+---Specifies the input path(s). This is equivalent to `<name1> <name2> ...`
+---@param ... string The input paths
+function compiler.input(...) end
 
-local function inputr(folder, extension)
-    extension = extension or 'cpp'
+---Inputs files from folders recursively. This is equivalent to `<folder>/*.<extension>` for any folders that contain 1 or more of a file with the specified extension.
+---@param folder string The folder to search
+---@param extension string? The extension to include, or 'cpp' if nil
+function compiler.inputr(folder, extension) end
 
-    if extension:sub(1, 1) ~= '.' then
-        extension = '.' .. extension
-    end
+---Adds an include folder, possibly a library path, and possibly a library name. This is equivalent to `-I<includePath> -L<libPath> -l<libName>`
+---@param includePath string The path to the include folder
+---@param libPath? string The path to the lib folder
+---@param libName? string The name of a lib file to load
+---@overload fun(paths: table)
+function compiler.include(includePath, libPath, libName) end
 
-    local fileList = utils.ExecuteCommand('ls ' .. folder, '*all')
-    local found = false
+---Include multiple folders. This is equivalent to `-I<includePath>` for all paths
+---@param paths table A table of include paths
+function compiler.include(paths) end
 
-    for file in fileList:gmatch('%S+') do
-        local path = fs.ConcatenatePaths(folder, file)
+---Adds a library folder and links all names
+---@param libPath? string The path to the lib folder
+---@param ... string The names to link
+---@overload fun(names: table)
+function compiler.link(libPath, ...) end
 
-        if fs.Exists(path .. '/') then
-            inputr(path, extension)
-        elseif not found and file:match(extension .. '$') then
-            input(fs.ConcatenatePaths(folder, '*' .. extension))
-            found = true
-        end
-    end
-end
+---Link multiple files. This is equivalent to `-l<name>` for all names
+---@param names table A table of names to link
+function compiler.link(names) end
 
-local function include(include, path, name)
-    if type(include) == 'table' then
-        for _, include in next, include do
-            settings.include[#settings.include + 1] = include
-        end
+---Link MacOS framework(s). This is equivalent to `-framework<frameworkName>` for all frameworks
+---@param ... string A list of frameworks to link.
+function compiler.framework(...) end
 
-        return
-    end
+---Specifies the output path. This is equivalent to `-o<path>`
+---@param path string The path to output to
+function compiler.output(path) end
 
-    settings.include[#settings.include + 1] = include
-    settings.linkPaths[#settings.linkPaths + 1] = path
-    settings.linkNames[#settings.linkNames + 1] = name
-end
+---Adds flags to the g++ command. This is equivalent to `<flags>`
+---@param ... string The flags to append to the build command
+function compiler.flags(...) end
 
-local function link(folder, ...)
-    local links
+---Runs the finalized build command
+function compiler.compile() end
 
-    if type(folder) == 'table' then
-        links = folder
-    else
-        settings.linkPaths[#settings.linkPaths + 1] = folder
-        links = {...}
-    end
+---Generates `compile_flags.txt` for clangd.
+function compiler.generateCompileFlags() end
 
-    for _, link in next, links do
-        settings.linkNames[#settings.linkNames + 1] = link
-    end
-end
+---Makes all functions global
+function compiler:makeGlobal()end
 
-local function framework(...)
-    local frameworks = {...}
-
-    for _, framework in next, frameworks do
-        settings.frameworks[#settings.frameworks + 1] = framework
-    end
-end
-
-local function output(file)
-    settings.output = file
-end
-
-local function flags(...)
-    local args = { ... }
-
-    for _, flag in next, args do
-        settings.flags[#settings.flags + 1] = flag
-    end
-end
-
-local function makeCommand()
-    local cmd = settings.compiler
-
-    if settings.standard then
-        cmd = cmd .. ' -std=' .. settings.standard
-    end
-
-    for _, input in next, settings.input do
-        cmd = cmd .. ' ' .. input
-    end
-
-    for _, include in next, settings.include do
-        cmd = cmd .. ' -I' .. include
-    end
-
-    for _, link in next, settings.linkPaths do
-        cmd = cmd .. ' -L' .. link
-    end
-
-    for _, name in next, settings.linkNames do
-        cmd = cmd .. ' -l' .. name
-    end
-
-    for _, framework in next, settings.frameworks do
-        cmd = cmd .. ' -framework ' .. framework
-    end
-
-    for _, flag in next, settings.flags do
-        cmd = cmd .. ' ' .. flag
-    end
-
-    if settings.output then
-        cmd = cmd .. ' -o' .. settings.output
-    end
-
-    return cmd
-end
-
-local function generateCompileFlags()
-    local flags = ''
-
-    if settings.standard then
-        flags = flags .. '-std=' .. settings.standard .. '\n'
-    end
-
-    for _, include in next, settings.include do
-        flags = flags .. '-I\n' .. include .. '\n'
-    end
-
-    for _, link in next, settings.linkPaths do
-        flags = flags .. '-L\n' .. link .. '\n'
-    end
-
-    for _, name in next, settings.linkNames do
-        flags = flags .. '-l\n' .. name .. '\n'
-    end
-
-    for _, framework in next, settings.frameworks do
-        flags = flags .. ' -framework\n' .. framework .. '\n'
-    end
-
-    for _, flag in next, settings.flags do
-        for f in flag:gmatch('%S+') do
-            flags = flags .. f .. '\n'
-        end
-    end
-
-    if settings.output then
-        flags = flags .. '-o\n' .. settings.output .. '\n'
-    end
-
-    local file = io.open('compile_flags.txt', 'w+')
-
-    if file then
-        file:write(flags)
-        file:close()
-    else
-        print('Could not open compile_flags.txt for writing')
-    end
-end
-
-local function build()
-    run(makeCommand())
-end
-
-local module = {
-    compiler = compiler,
-    standard = standard,
-    input = input,
-    inputr = inputr,
-    include = include,
-    link = link,
-    framework = framework,
-    output = output,
-    flags = flags,
-    build = build,
-    generateCompileFlags = generateCompileFlags
-}
-
-function Plugin.Command()
-    local file = Plugin.Arguments[1] or 'make.lua'
-    local func = assert(loadfile(file), 'File does not exist')
-
-    for i, v in next, module do
-        if i ~= 'build' then
-            _G[i] = v
-        end
-    end
-
-    func()
-    build()
-end
-
-function Plugin.Import()
-    return module
-end
+compiler = compiler.compiler
+standard = compiler.standard
+input = compiler.input
+inputr = compiler.inputr
+include = compiler.include
+link = compiler.link
+framework = compiler.framework
+output = compiler.output
+flags = compiler.flags
+compile = compiler.compile
+generateCompileFlags = compiler.generateCompileFlags
