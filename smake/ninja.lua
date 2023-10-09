@@ -2,13 +2,13 @@ local gpp = import('smake/gpp')
 local fs = import('smake/utils/fs')
 local ninjaGen = {
     mainRules = [[rule cxx
-        command = $cxx -MMD -MT $out -MF $out.d $cflags -c $in -o $out
-        description = CXX $out
-        depfile = $out.d
-        deps = gcc
-    rule link
-        command = $cxx -L$builddir -o $out $in $libs
-        description = LINK $out
+    command = $cxx -MMD -MT $out -MF $out.d $cflags -c $in -o $out
+    description = CXX $out
+    depfile = $out.d
+    deps = gcc
+rule link
+    command = $cxx -L$builddir -o $out $in $libs
+    description = LINK $out
     ]]
 }
 
