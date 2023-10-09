@@ -1,21 +1,20 @@
+local gpp = import('smake/gpp')
 local fs = import('smake/utils/fs')
-local ninja = {}
-
-local mainRules = [[rule cxx
-    command = $cxx -MMD -MT $out -MF $out.d $cflags -c $in -o $out
-    description = CXX $out
-    depfile = $out.d
-    deps = gcc
-rule link
-    command = $cxx -L$builddir -o $out $in $libs
-    description = LINK $out
-]]
-
-local buildRule = 'build $builddir/%s.o: cxx %s'
+local ninjaGen = {
+    mainRules = [[rule cxx
+        command = $cxx -MMD -MT $out -MF $out.d $cflags -c $in -o $out
+        description = CXX $out
+        depfile = $out.d
+        deps = gcc
+    rule link
+        command = $cxx -L$builddir -o $out $in $libs
+        description = LINK $out
+    ]]
+}
 
 -- Helpers
 
-function ninja:getInputFiles()
+function ninjaGen:getInputFiles()
     local inputFiles = {}
 
     for _, path in next, self.compilerOptions.input do
@@ -28,7 +27,7 @@ end
 
 -- Generation
 
-function ninja:generateCFlags()
+function ninjaGen:generateCFlags()
     local options = self.compilerOptions
     local cflags = ''
 
@@ -44,10 +43,10 @@ function ninja:generateCFlags()
         cflags = cflags .. ' ' .. flag
     end
 
-    return cflags:sub(1)
+    return cflags:sub(2)
 end
 
-function ninja:generateLibs()
+function ninjaGen:generateLibs()
     local options = self.compilerOptions
     local libs = ''
 
@@ -63,22 +62,22 @@ function ninja:generateLibs()
         libs = libs .. ' -framework ' .. framework
     end
 
-    return libs:sub(1)
+    return libs:sub(2)
 end
 
 -- File utilities
 
-function ninja:writeVariable(name, value)
+function ninjaGen:writeVariable(name, value)
     self.file:write(name .. ' = ' .. value .. '\n')
 end
 
-function ninja:writeBuildRule(input)
+function ninjaGen:writeBuildRule(input)
     local fileName = input:match('(.+)%.(%w+)$')
-    self.file:write(buildRule:format(fileName, input) .. '\n')
+    self.file:write(('build $builddir/%s.o: cxx %s'):format(fileName, input) .. '\n')
     self.buildRules = self.buildRules .. '$builddir/' .. fileName .. '.o '
 end
 
-function ninja:generateBuildFile(buildDirectory)
+function ninjaGen:generateBuildFile(buildDirectory)
     buildDirectory = buildDirectory or '.'
 
     self.file = io.open('build.ninja', 'w+')
@@ -94,7 +93,7 @@ function ninja:generateBuildFile(buildDirectory)
     self:writeVariable('cflags', self:generateCFlags())
     self:writeVariable('libs', self:generateLibs())
 
-    self.file:write(mainRules)
+    self.file:write(self.mainRules)
 
     local inputFiles = self:getInputFiles()
     for _, input in next, inputFiles do
@@ -108,12 +107,34 @@ function ninja:generateBuildFile(buildDirectory)
     self.file = nil
 end
 
+function ninjaGen.new(compiler)
+    return setmetatable({
+        compiler = compiler,
+        compilerOptions = compiler.options
+    }, { __index = ninjaGen })
+end
+
+local function generateBuildFile(compiler, buildDirectory)
+    local generator = ninjaGen.new(compiler)
+    generator:generateBuildFile(buildDirectory)
+end
+
+local function fromGlobalCompiler()
+    local compiler = gpp()
+    compiler:makeGlobal()
+
+    return ninjaGen.new(compiler)
+end
+
 function Plugin.Import()
-    ---@type fun(compiler: compiler)
-    return function(compiler)
-        return setmetatable({
-            compiler = compiler,
-            compilerOptions = compiler.options
-        }, { __index = ninja })
-    end
+    return setmetatable(
+    {
+        generateBuildFile = generateBuildFile,
+        fromGlobalCompiler = fromGlobalCompiler
+    },
+    {
+        __call = function(self, compiler)
+            return ninjaGen.new(compiler)
+        end
+    })
 end
