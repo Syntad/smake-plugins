@@ -44,7 +44,7 @@ function ninja:generateCFlags()
         cflags = cflags .. ' ' .. flag
     end
 
-    return cflags:match('%s*(.+)')
+    return cflags:sub(1)
 end
 
 function ninja:generateLibs()
@@ -63,7 +63,7 @@ function ninja:generateLibs()
         libs = libs .. ' -framework ' .. framework
     end
 
-    return libs:match('%s*(.+)')
+    return libs:sub(1)
 end
 
 -- File utilities
