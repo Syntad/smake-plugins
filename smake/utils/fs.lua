@@ -42,6 +42,17 @@ local function Delete(path)
     run('rm ' .. path )
 end
 
+local function Find(path)
+    local file = utils.ExecuteCommand('find ' .. path)
+    local files = {}
+
+    for fileName in file:lines() do
+        files[#files + 1] = fileName
+    end
+
+    return files
+end
+
 -- Paths
 
 local function RelativePath(path)
@@ -106,6 +117,7 @@ function Plugin.Import()
         Exists = Exists,
         CreateFolder = CreateFolder,
         Delete = Delete,
+        Find = Find,
         DeleteFolder = DeleteFolder,
         Move = Move,
         Copy = Copy,

@@ -19,8 +19,14 @@ end
 function commandResult:__index(index)
     if self.file[index] then
         if type(self.file[index]) == 'function' then
-            return function(self, ...)
-                return self.file[index](self.file, ...)
+            return function(_self, ...)
+                if _self == self then
+                    -- If it is being called as a member function
+                    return self.file[index](self.file, ...)
+                else
+                    -- If it is being called as a static function
+                    return self.file[index](_self, ...)
+                end
             end
         else
             return self.file[index]
