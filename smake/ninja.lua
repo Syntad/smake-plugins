@@ -100,7 +100,7 @@ function ninjaGen:generateBuildFile(buildDirectory)
     end
 
     -- Main build rule
-    self.file:write('build $builddir/a.out: link ' .. self.buildRules .. '\n')
+    self.file:write('build $builddir/' .. (self.compilerOptions.output or 'a.out') .. ': link ' .. self.buildRules .. '\n')
 
     self.file:close()
     self.file = nil
